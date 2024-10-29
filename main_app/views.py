@@ -1,9 +1,88 @@
-from django.shortcuts import render
+from django.shortcuts import render, redirect
 from .models import Cat
+
+from django.views.generic.edit import CreateView, UpdateView, DeleteView
 
 # res.send in node
 from django.http import HttpResponse
 # Create your views here.
+
+from .forms import FeedingForm
+
+
+# cat_id comes from the 
+# the url route  path('cats/<int:cat_id>/', views
+def cat_detail(request, cat_id): # like req.params
+	# find the row in the db that matches the cat_id with
+	# the row number
+	cat_from_db = Cat.objects.get(id=cat_id)
+	# respond with the template
+
+	feeding_form = FeedingForm()# creating a form object to pass into 
+	# our template
+	return render(request, 'cats/detail.html', {'cat': cat_from_db, 'feeding_form': feeding_form})
+
+# path('cats/<int:pk>/add_feeding/', views.add_feeding, name='add-feeding'),
+# cat_id needs to match the url param ^^^^
+def add_feeding(request, cat_id):
+	# process the post request and create a feeding!
+	form = FeedingForm(request.POST)# request.POST is like req.body
+	# you're creating a form instance by filling out the form with 
+	# the data from the request(form submission)
+	# validate the form
+	if form.is_valid():
+		# don't save it until we add the cat_id 
+		new_feeding = form.save(commit=False)
+		# Makes an in memory representation of our new feeding row in psql
+		new_feeding.cat_id = cat_id
+		new_feeding.save()# adds the row to the feeding table
+	# redirect to cat-detail page, (cat_id (left) is from the param name)
+
+	# import redirect at the top
+	return redirect('cat-detail', cat_id=cat_id)
+
+
+
+
+
+# This expects a template in the format of 
+# templates/<app_name>/<model_name>_form.html
+# templates/main_app/cat_form.html
+class CatUpdate(UpdateView):
+	model = Cat
+	# disallow the renaming of a cat by exluding the name field
+	fields = ['breed', 'description', 'age']
+	# GO to the models.py file for the Cat model
+	# to see where the CatUpdate redirects to, after
+	# a POST request
+
+
+class CatDelete(DeleteView):
+	model = Cat
+	success_url = '/cats/'# refering to a url! in the urls.py!
+
+
+# This expects a template in the format of 
+# templates/<app_name>/<model_name>_form.html
+# templates/main_app/cat_form.html
+class CatCreate(CreateView):
+	model = Cat
+	fields = '__all__'
+	# GO to the models.py file for the Cat model
+	# to see where the CatCreate redirects to, after
+	# a POST request
+
+	# success_url = '/cats/'
+
+
+
+
+
+
+
+
+
+
 
 ## ======================================
 # THIS IS ONLY FOR TODAY FRIDAY (FIRST DAY)

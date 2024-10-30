@@ -9,11 +9,31 @@ from django.http import HttpResponse
 
 from .forms import FeedingForm
 
+def associate_toy(request, cat_id, toy_id):
+	cat = Cat.objects.get(id=cat_id)
+	cat.toys.add(toy_id)
+	# adds the row with cat_id and toy_id to the join table in psql
+	# Cat.objects.get(id=cat_id).toys.add(toy_id)
+
+	return redirect('cat-detail', cat_id=cat_id)
+
+def remove_toy(request, cat_id, toy_id):
+    # Look up the cat
+	cat = Cat.objects.get(id=cat_id)
+    # Look up the toy
+	toy = Toy.objects.get(id=toy_id)
+    # Remove the toy from the cat
+	cat.toys.remove(toy)
+	return redirect('cat-detail', cat_id=cat.id)
+
+
 class ToyCreate(CreateView):
     model = Toy
     fields = '__all__'
 
-
+# template
+# <name_of_app>/<model_name>_list.html
+# main_app/toy_list.html
 class ToyList(ListView):
     model = Toy
 
@@ -37,9 +57,16 @@ def cat_detail(request, cat_id): # like req.params
 	cat_from_db = Cat.objects.get(id=cat_id)
 	# respond with the template
 
+	# get all the toys that the cat does not have!
+
+	# field lookups
+	# cat.toys.all().values_list('id') returns a list of all the cat toys id's
+	# for exampl [ 1, 3, 99] numbers represent toy ids
+	toys_cat_doesnt_have = Toy.objects.exclude(id__in = cat_from_db.toys.all().values_list('id'))
+
 	feeding_form = FeedingForm()# creating a form object to pass into 
 	# our template
-	return render(request, 'cats/detail.html', {'cat': cat_from_db, 'feeding_form': feeding_form})
+	return render(request, 'cats/detail.html', {'cat': cat_from_db, 'feeding_form': feeding_form, 'toys': toys_cat_doesnt_have})
 
 # path('cats/<int:pk>/add_feeding/', views.add_feeding, name='add-feeding'),
 # cat_id needs to match the url param ^^^^
@@ -86,7 +113,7 @@ class CatDelete(DeleteView):
 # templates/main_app/cat_form.html
 class CatCreate(CreateView):
 	model = Cat
-	fields = '__all__'
+	fields = ['name', 'breed', 'description', 'age']
 	# GO to the models.py file for the Cat model
 	# to see where the CatCreate redirects to, after
 	# a POST request

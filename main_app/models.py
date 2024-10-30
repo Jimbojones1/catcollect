@@ -42,3 +42,15 @@ class Feeding(models.Model):
 		# to get the human readable value for your the choice
 		# so "B" becomes Breakfast when the Feeding is printed!
 		return f"{self.get_meal_display()} on {self.date}"
+
+
+# Add the Toy model
+class Toy(models.Model):
+    name = models.CharField(max_length=50)
+    color = models.CharField(max_length=20)
+
+    def __str__(self):
+        return self.name
+
+    def get_absolute_url(self):
+        return reverse('toy-detail', kwargs={'pk': self.id})
